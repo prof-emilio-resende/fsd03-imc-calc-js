@@ -16,27 +16,42 @@ function Person(height, weight) {
 
 function Dietician(height, weight) {
   Person.call(this, height, weight);
-  this.calculateImc = function() {
-    return this.getWeight() / this.getHeight() ** 2;
+  this.calculateImc = function(callback) {
+    var result = this.getWeight() / this.getHeight() ** 2;
+    callback(result);
+    return result;
   }
 }
 Dietician.prototype = Object.create(Person.prototype);
 Dietician.prototype.constructor = Dietician;
 
 
-function createDieticianFromForm() {
-  var height = parseFloat(document.getElementById('height').value);
-  var weight = parseFloat(document.getElementById('weight').value);
+function createDietician(inputHeight, inputWeight) {
+  var height = parseFloat(inputHeight);
+  var weight = parseFloat(inputWeight);
   
   return new Dietician(height, weight);
 }
 
-function imprimirResultado(resultado) {
-  document.getElementById('imc').innerHTML = resultado;
+function calculateBuilder() {
+  console.log('construindo a minha closure para manipulacao do evento de clique...');
+  var heightElem = document.getElementById('height');
+  var weightElem = document.getElementById('weight');
+  var imcElem = document.getElementById('imc');
+
+  return function() {
+    console.log('calculando o IMC utilizando os valores do escopo léxico...');
+    var dietician = createDietician(heightElem.value, weightElem.value);
+    dietician.calculateImc(function (resultado) {
+      imcElem.innerHTML = resultado;
+    });
+  }
 }
 
-function calculate() {
-  var dietician = createDieticianFromForm();
-  resultado = dietician.calculateImc();
-  imprimirResultado(resultado);
+window.onload = function(evt) {
+  console.log('carreguei o conteúdo...');
+  var btn = document.querySelector('div.form button');
+  btn.addEventListener('click', calculateBuilder());
 }
+
+console.log('executei o script...');
