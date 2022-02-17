@@ -1,3 +1,40 @@
+function createRequest() {
+  var request = null;
+  try {
+    request = new XMLHttpRequest();
+  } catch(ex) {
+    console.log('Problema ao inicializar o objeto XmlHttpRequest...');
+    try {
+      request = new ActiveXObject("Msxml2.XMLHTTP");
+    } catch (ex2) {
+      console.log('Problema ao inicializar o objeto ActiveXObject (Msxml2)...');
+      request = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+  }
+  
+  return request;
+}
+
+function calculateImcAPI(person, callback) {
+  var req = createRequest();
+  if (!req) return null;
+
+  req.onreadystatechange = function() {
+    if (this.readyState === 4) {
+      if (this.status === 200) {
+        callback(JSON.parse(this.responseText));
+      }
+    }
+  }
+  req.open('POST', 'http://localhost:8080/imc/calculate', true);
+  req.setRequestHeader('Content-Type', 'application/json');
+  req.send(JSON.stringify({
+    'weight': person.getWeight(),
+    'height': person.getHeight()
+  }));
+}
+
+
 function Person(height, weight) {
   if (typeof(height) !== 'number' || isNaN(height))
     throw Error('Height is not valid as a number...');
@@ -17,9 +54,7 @@ function Person(height, weight) {
 function Dietician(height, weight) {
   Person.call(this, height, weight);
   this.calculateImc = function(callback) {
-    var result = this.getWeight() / this.getHeight() ** 2;
-    callback(result);
-    return result;
+    calculateImcAPI(this, callback);
   }
 }
 Dietician.prototype = Object.create(Person.prototype);
@@ -43,7 +78,7 @@ function calculateBuilder() {
     console.log('calculando o IMC utilizando os valores do escopo léxico...');
     var dietician = createDietician(heightElem.value, weightElem.value);
     dietician.calculateImc(function (resultado) {
-      imcElem.innerHTML = resultado;
+      imcElem.innerHTML = resultado['imc'];
     });
   }
 }
